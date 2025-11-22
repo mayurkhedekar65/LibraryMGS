@@ -26,16 +26,14 @@
                 </div>
                 <div class="flex items-center gap-4">
                     {% if user.is_staff %}
-                        <!-- DBMS CRUD Operations Link -->
-                        <a href="{% url 'manage_books' %}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Books (Manage)</a>
-                        
-                        <!-- Transaction Links -->
-                        <a href="{% url 'issue_book' %}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Issue</a>
-                        <a href="{% url 'all_transactions' %}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Returns</a>
+                        <!-- ADMIN LINK -->
+                        <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                            <span>⚡</span> Admin Dashboard
+                        </a>
                     {% endif %}
                     
                     {% if user.is_authenticated %}
-                        <a href="{% url 'dashboard' %}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Dashboard</a>
+                        <a href="{% url 'dashboard' %}" class="text-sm font-medium text-gray-700 hover:text-blue-600">My Books</a>
                         
                         <form method="post" action="{% url 'logout' %}?next={% url 'index' %}">
                             {% csrf_token %}
@@ -52,10 +50,9 @@
     <!-- Main Content -->
     <main class="flex-grow py-10 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            <!-- Messages Block (Success/Error notifications) -->
             {% if messages %}
                 {% for message in messages %}
-                    <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700 border border-red-200{% else %}bg-green-100 text-green-700 border border-green-200{% endif %} flex items-center gap-2 shadow-sm">
                         {{ message }}
                     </div>
                 {% endfor %}

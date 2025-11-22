@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from .models import Book, Transaction, Member
 from .forms import IssueBookForm, MemberSignUpForm, BookForm
 
@@ -29,8 +29,42 @@ def member_dashboard(request):
         transactions = Transaction.objects.filter(member=member).order_by('-issue_date')
         return render(request, 'member_dashboard.html', {'transactions': transactions})
     except Member.DoesNotExist:
+        # Redirect staff to admin dashboard if they accidentally go here
+        if request.user.is_staff:
+            return redirect('admin_dashboard')
         messages.error(request, "You do not have a member profile linked.")
         return redirect('index')
+
+# --- NEW ADMIN DASHBOARD VIEW ---
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def admin_dashboard(request):
+    """Central hub for Librarians to manage the system."""
+    
+    # 1. Calculate Stats
+    total_books = Book.objects.aggregate(total=Sum('total_copies'))['total'] or 0
+    books_issued = Transaction.objects.filter(status='Issued').count()
+    books_available = total_books - books_issued
+    total_members = Member.objects.count()
+    
+    # 2. Get Recent Activity
+    recent_transactions = Transaction.objects.select_related('book', 'member__user').order_by('-issue_date')[:5]
+    
+    # 3. Check for Overdue Books
+    overdue_transactions = Transaction.objects.filter(
+        status='Issued', 
+        expected_return_date__lt=timezone.now()
+    ).count()
+
+    context = {
+        'total_books': total_books,
+        'books_issued': books_issued,
+        'books_available': books_available,
+        'total_members': total_members,
+        'recent_transactions': recent_transactions,
+        'overdue_count': overdue_transactions,
+    }
+    return render(request, 'admin_dashboard.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)
