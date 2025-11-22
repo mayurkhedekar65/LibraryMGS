@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from .models import Book, Transaction, Member
-from .forms import IssueBookForm, MemberSignUpForm
+from .forms import IssueBookForm, MemberSignUpForm, BookForm
 
 def index(request):
     """Homepage: Display a list of all available books with search."""
@@ -29,7 +29,6 @@ def member_dashboard(request):
         transactions = Transaction.objects.filter(member=member).order_by('-issue_date')
         return render(request, 'member_dashboard.html', {'transactions': transactions})
     except Member.DoesNotExist:
-        # Fallback if a user exists but has no member profile (shouldn't happen with new signup flow)
         messages.error(request, "You do not have a member profile linked.")
         return redirect('index')
 
@@ -106,3 +105,52 @@ def signup(request):
         form = MemberSignUpForm()
     
     return render(request, 'registration/signup.html', {'form': form})
+
+# --- NEW DBMS CRUD OPERATIONS ---
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def manage_books(request):
+    """READ: View all books with edit/delete options."""
+    books = Book.objects.all()
+    return render(request, 'manage_books.html', {'books': books})
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def add_book(request):
+    """INSERT: Add a new book to the database."""
+    if request.method == 'POST':
+        form = BookForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Book added successfully!")
+            return redirect('manage_books')
+    else:
+        form = BookForm()
+    return render(request, 'book_form.html', {'form': form, 'title': 'Add New Book'})
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def edit_book(request, pk):
+    """UPDATE: Modify an existing book."""
+    book = get_object_or_404(Book, pk=pk)
+    if request.method == 'POST':
+        form = BookForm(request.POST, instance=book)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Book updated successfully!")
+            return redirect('manage_books')
+    else:
+        form = BookForm(instance=book)
+    return render(request, 'book_form.html', {'form': form, 'title': 'Edit Book'})
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def delete_book(request, pk):
+    """DELETE: Remove a book from the database."""
+    book = get_object_or_404(Book, pk=pk)
+    if request.method == 'POST':
+        book.delete()
+        messages.success(request, "Book deleted successfully!")
+        return redirect('manage_books')
+    return render(request, 'book_confirm_delete.html', {'book': book})

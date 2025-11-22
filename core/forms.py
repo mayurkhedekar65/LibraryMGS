@@ -31,7 +31,6 @@ class IssueBookForm(forms.Form):
             
         return cleaned_data
 
-# --- ADD THIS NEW FORM ---
 class MemberSignUpForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none'}))
     phone_number = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none'}))
@@ -62,3 +61,18 @@ class MemberSignUpForm(UserCreationForm):
                 address=self.cleaned_data['address']
             )
         return user
+
+# --- NEW FORM FOR DBMS MINI PROJECT (INSERT/UPDATE BOOKS) ---
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ['title', 'author', 'isbn', 'genre', 'total_copies', 'available_copies', 'cover_image_url']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none'}),
+            'author': forms.TextInput(attrs={'class': 'w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none'}),
+            'isbn': forms.TextInput(attrs={'class': 'w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none'}),
+            'genre': forms.TextInput(attrs={'class': 'w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none'}),
+            'total_copies': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none'}),
+            'available_copies': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none'}),
+            'cover_image_url': forms.URLInput(attrs={'class': 'w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'https://example.com/image.jpg'}),
+        }
